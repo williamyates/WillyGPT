@@ -2,7 +2,7 @@
 
 A 1.68B-parameter chat model trained from scratch (pretraining, supervised finetuning (SFT), and GRPO reinforcement learning) on the [nanochat](https://github.com/karpathy/nanochat) recipe (MIT). Built & trained by William Yates on a single 8×H100 node.
 
-This repository contains the **training recipe, identity-data tooling, and ops scripts**. The **weights** are on ([Hugging Face](https://huggingface.co/williamyates/WillyGPT)). Base pretraining clears the GPT-2 CORE reference (0.3016 vs 0.2565); the model ships as two checkpoints (SFT and RL) whose trade-offs are characterized below.
+This repository contains the **training recipe, identity-data tooling, and ops scripts**. The **weights** are on [Hugging Face](https://huggingface.co/williamyates/WillyGPT). Base pretraining clears the GPT-2 CORE reference (0.3016 vs 0.2565); the model ships as two checkpoints (SFT and RL) whose trade-offs are characterized below.
 
 ---
 
@@ -58,11 +58,11 @@ CORE 0.3016 exceeds the GPT-2 reference of 0.2565. **The SFT checkpoint is the d
 
 ---
 
-## SFT vs. RL: a specialization tax, mostly at the output layer
+## SFT vs. RL: regression for some specialization, mostly at the output layer
 
 GRPO moved the single metric it optimized (GSM8K, +6.3 pt / +57% relative; reward climbed cleanly across all 467 steps) and left the rest flat or lower. This is the expected specialization tax of single-objective RL. A logit-level investigation locates some of the regression in when the model stops generating.
 
-### SpellingBee is masked, not lost
+### SpellingBee regression
 
 On raw spelling, SFT and RL are identical: 23/24, both missing only "mississippi" (a scale limit common to both, not a regression). What RL changed is termination. After the reasoning preamble, the RL checkpoint places near-certain probability on the end-of-turn token *before* emitting the `#### N` answer the grader requires:
 
@@ -72,15 +72,15 @@ P(<|assistant_end|>) at the answer position:  0.000 (SFT)  →  0.999 (RL)
 
 The model quits before it answers. Suppressing `<|assistant_end|>` for the first ~80 decode steps (a `min_new_tokens` constraint, inference only, no weight changes) recovers the identical correct trace and restores SpellingBee from ~18% to **~95%**.
 
-### HumanEval is genuinely mixed
+### HumanEval is mixed
 
-Unlike SpellingBee, no single mechanism explains the HumanEval drop. Hand-grading the RL failures splits roughly three ways: (a) correct code inside a malformed code fence — a harness extraction artifact, recoverable; (b) degenerate repetition loops (one token emitted hundreds of times) — real RL mode-collapse; (c) clean code with wrong logic — a real capability limit the SFT model shares. About half is a grading artifact and half is real; EOS-suppression does not help, because the model already writes complete functions on ordinary coding prompts.
+Unlike SpellingBee, no single mechanism was identified to be the cause of the HumanEval drop. Hand-grading the RL failures splits roughly three ways: (a) correct code inside a malformed code fence — a harness extraction artifact, recoverable; (b) degenerate repetition loops (one token emitted hundreds of times) — real RL mode-collapse; (c) clean code with wrong logic — a real capability limit the SFT model shares. About half is a grading artifact and half is real; EOS-suppression does not help, because the model already writes complete functions on ordinary coding prompts.
 
 ### Identity robustness is thin, and RL thinned it further
 
 On a cold, single-turn "Who are you?", both checkpoints answer correctly. Mid-conversation, after unrelated turns, the RL checkpoint lost the thread and confabulated a DeepMind/AlphaGo origin; the SFT checkpoint held its real identity in the same setting. Identity acquired through finetuning is fragile at this scale, and RL eroded what robustness existed — consistent with the regression pattern in the eval table. The recommended mitigation is an inference-time system prompt (zero retraining); a durable fix is multi-turn identity data where the question lands after a drifting context.
 
-### Falsified hypothesis (interpretability caveat)
+### Smear parameters (falsified hypothesis)
 
 A weight-diff flagged the model's "smear" parameters as the largest relative movers (`smear_gate` +56%, `smear_lambda` 0.249 → 0.299), suggesting RL had blurred the letter-level signal. A dose-response sweep falsified this: spelling accuracy is flat as `smear_lambda` varies from 0 through 0.35 (past the RL value) and only degrades at 0.45. The weight movement is real but functionally inert. **Largest relative weight change ≠ functional importance**; every interpretability claim here is gated by a behavioral ablation.
 
@@ -98,7 +98,7 @@ WillyGPT's size-peers are GPT-2 XL (1.5B, 2019) and current ~1.5B models. Method
 | Qwen2.5-1.5B · '24 | — | 59.8 | 79.1 | 53.4 | 68.5 |
 | SmolLM2-1.7B · '24 | — | 51.9 | 77.8 | 50.3 | 47.7 |
 
-At identical parameter count, WillyGPT is well ahead of GPT-2 XL (which is near-random on MMLU and ~0 on math/code) — the difference is six years of data quality and a finetuning pipeline GPT-2 never had. Against the same-framework nanochat d20 speedrun it wins every column, as a correctly-built d26 at ~3× the parameters should. The gap to 2024 1.5B models is specific rather than global: ARC-Challenge (53.1) is level with Qwen2.5-1.5B (53.4), and WillyGPT only falls off sharply on MMLU and GSM8K — knowledge breadth and multi-step math, the two axes that scale most directly with token budget. Qwen2.5 trained on ~18T tokens; WillyGPT on 11B (~1000×). The deficit appears where token budget predicts, not uniformly.
+At identical parameter count, WillyGPT is well ahead of GPT-2 XL (which is near-random on MMLU and ~0 on math/code) — the difference is six years of data quality and a finetuning pipeline GPT-2 never had. Against the same-framework nanochat d20 speedrun it wins every column, as a correctly-built d26 at ~3× the parameters should. The gap to 2024 1.5B models is specific rather than global: ARC-Challenge (53.1) is level with Qwen2.5-1.5B (53.4), and WillyGPT only falls off sharply on MMLU and GSM8K — knowledge breadth and multi-step math, the two axes that scale most directly with token budget. Qwen2.5 trained on ~18T tokens; WillyGPT on 11B (~1000×).
 
 ---
 
@@ -107,7 +107,7 @@ At identical parameter count, WillyGPT is well ahead of GPT-2 XL (which is near-
 Sampled from the SFT checkpoint.
 
 - **Multi-turn coherence and identity.** Holds context across turns, incorporates new user-supplied details, asks sensible clarifying questions, and answers "who are you?" correctly several turns deep with accurate origin and scale.
-- **Documented weakness — confident hallucination.** Invents plausible-but-false specifics (e.g. a "Ghibli Museum" in Thailand; it is in Tokyo). The honesty about being unreliable is trained in; the unreliability itself is a consequence of parameter count. **Treat all specific factual claims as unverified.**
+- **Documented weakness — confident hallucination.** Invents plausible-but-false specifics (e.g. a "Ghibli Museum" in Thailand; it is in Tokyo). The honesty about being unreliable is trained in; the unreliability itself is a consequence of parameter count. We've had LLMs for the better half of a decade, but **treat all specific factual claims as unverified**. Neat reminder of how severe hallucinations were, though.
 
 ---
 
