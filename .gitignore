@@ -1,0 +1,29 @@
+# model weights / checkpoints — these go on Hugging Face, NOT GitHub
+*.pt
+*.safetensors
+*.bin
+*_checkpoints/
+.cache/
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# secrets — never commit API keys
+.env
+*.pem
+*.key
+
+# os / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# logs / runs
+*.log
+wandb/
+willygpt_backup/
