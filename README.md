@@ -29,7 +29,7 @@ Three stages, run in sequence on one 8×H100 node (~9 h core wall-clock).
 
 **1 — Pretraining** (~6.76 h). Next-token prediction on NVIDIA ClimbMix at a data:parameter ratio of 12 (compute-optimal; the stock nanochat speedrun uses 8).
 `11.02B tokens · 10,510 iterations · train bpb 0.690 · val bpb 0.688 · CORE 0.3016`
-Validation bpb at or below training bpb indicates no overfitting.
+Validation bpb at or below training bpb indicates model is not overfit.
 
 **2 — Supervised finetuning** (~13 min). Chat format, multiple-choice, tool use, and math style on SmolTalk + MMLU/GSM8K/spelling, mixed with a 486-conversation identity set. The identity data was LLM-generated for diversity and constrained to keep the model honest about its scale and to refuse to fabricate a builder backstory.
 `486 identity conversations · val bpb 0.2567 · final loss ~0.81`
