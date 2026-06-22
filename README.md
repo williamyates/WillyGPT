@@ -1,6 +1,6 @@
 # WillyGPT
 
-A 1.68B-parameter chat model trained from scratch (pretraining, supervised finetuning (SFT), and GRPO reinforcement learning) on the [nanochat](https://github.com/karpathy/nanochat) recipe (MIT). Built & trained by William Yates on a single 8×H100 node.
+A 1.68B-parameter chat model trained from scratch (pretraining, supervised finetuning (SFT), and GRPO reinforcement learning on the [nanochat](https://github.com/karpathy/nanochat) recipe (MIT). Built & trained by William Yates on a single 8×H100 node.
 
 This repository contains the **training recipe, identity-data tooling, and ops scripts**. The **weights** are on [Hugging Face](https://huggingface.co/williamyates/WillyGPT). Base pretraining clears the GPT-2 CORE reference (0.3016 vs 0.2565); the model ships as two checkpoints (SFT and RL) whose trade-offs are characterized below.
 
