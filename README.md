@@ -2,7 +2,7 @@
 
 A 1.68B-parameter chat model trained from scratch (pretraining, supervised finetuning (SFT), and GRPO reinforcement learning) on the [nanochat](https://github.com/karpathy/nanochat) recipe (MIT). Built & trained by William Yates on a single 8×H100 node.
 
-This repository contains the **training recipe, identity-data tooling, and ops scripts**. The **weights** are hosted separately ([see Running it](#running-it)). Base pretraining clears the GPT-2 CORE reference (0.3016 vs 0.2565); the model ships as two checkpoints (SFT and RL) whose trade-offs are characterized below.
+This repository contains the **training recipe, identity-data tooling, and ops scripts**. The **weights** are on ([Hugging Face](https://huggingface.co/williamyates/WillyGPT)). Base pretraining clears the GPT-2 CORE reference (0.3016 vs 0.2565); the model ships as two checkpoints (SFT and RL) whose trade-offs are characterized below.
 
 ---
 
@@ -139,10 +139,16 @@ Sampled from the SFT checkpoint.
 The weights are nanochat-architecture, not Hugging Face Transformers — they do not load with `AutoModel.from_pretrained`. Run them with the nanochat code:
 
 ```bash
+# 1. get nanochat
 git clone https://github.com/karpathy/nanochat.git && cd nanochat
 uv sync --extra gpu        # or --extra cpu for a Mac (MPS), slow but functional
-# place the checkpoint + tokenizer under $NANOCHAT_BASE_DIR/.cache/nanochat/...
-python -m scripts.chat_cli -i sft -p "Who are you?"
+
+# 2. download the weights into nanochat's cache
+export NANOCHAT_BASE_DIR=$PWD
+hf download williamyates/WillyGPT --local-dir "$NANOCHAT_BASE_DIR/.cache/nanochat"
+
+# 3. chat
+python -m scripts.chat_cli -i sft -p "Who are you?"     # SFT = default
 python -m scripts.chat_web
 ```
 
