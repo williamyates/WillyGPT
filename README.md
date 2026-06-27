@@ -10,7 +10,7 @@ measurable cost to capabilities it did not reward. The build ships as two checkp
 the recommended default**; RL is a math specialist with documented regressions.
 
 - Model weights: [huggingface.co/williamyates/WillyGPT](https://huggingface.co/williamyates/WillyGPT)
-- Full build report + mechanistic analysis: `willygpt_report.html`
+- Full build report + mechanistic analysis: [WillyGPT Model Card](https://willygpt.netlify.app)
 
 ## Checkpoints
 
